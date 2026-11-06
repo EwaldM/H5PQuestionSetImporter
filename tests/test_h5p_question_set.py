@@ -446,6 +446,96 @@ class QuestionSetTests(unittest.TestCase):
                     if name not in ("h5p.json", "content/content.json", "content/config.json"):
                         self.assertEqual(a.read(name), b.read(name))
 
+    def make_versioned_fixture(self, destination, *, question_set=(1, 20),
+                               multi_choice=(1, 16), question_ref=(1, 16),
+                               semantics=(1, 16), missing_dependency=None,
+                               missing_semantics=False, other_library=False):
+        source = self.fixtures / EXAMPLES[0][1]
+        with zipfile.ZipFile(source) as archive:
+            entries = {name: archive.read(name) for name in archive.namelist()}
+        info = json.loads(entries["h5p.json"])
+        for dep in info["preloadedDependencies"]:
+            if dep["machineName"] == "H5P.QuestionSet":
+                dep["majorVersion"], dep["minorVersion"] = question_set
+            if dep["machineName"] == "H5P.MultiChoice":
+                dep["majorVersion"], dep["minorVersion"] = multi_choice
+        if missing_dependency:
+            info["preloadedDependencies"] = [d for d in info["preloadedDependencies"]
+                                              if d["machineName"] != missing_dependency]
+        entries["h5p.json"] = json.dumps(info).encode("utf-8")
+        entries[f"H5P.QuestionSet-{question_set[0]}.{question_set[1]}/semantics.json"] = b"[]"
+        content = json.loads(entries["content/content.json"])
+        for q in content["questions"]:
+            q["library"] = f"H5P.MultiChoice {question_ref[0]}.{question_ref[1]}"
+        if other_library:
+            content["questions"][0]["library"] = "H5P.TrueFalse 1.8"
+        entries["content/content.json"] = json.dumps(content).encode("utf-8")
+        old_path = "H5P.MultiChoice-1.16/semantics.json"
+        value = entries.pop(old_path)
+        if not missing_semantics:
+            entries[f"H5P.MultiChoice-{semantics[0]}.{semantics[1]}/semantics.json"] = value
+        with zipfile.ZipFile(destination, "w") as archive:
+            for name, value in entries.items():
+                archive.writestr(name, value)
+
+    def test_mismatched_versions_warn_and_continue_in_both_modes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "alternate_versions.h5p"
+            self.make_versioned_fixture(source, question_set=(2, 0), multi_choice=(1, 17),
+                                        question_ref=(1, 17), semantics=(1, 17))
+            for mode in ("create", "update"):
+                with self.subTest(mode=mode):
+                    output = Path(tmp) / f"{mode}.h5p"
+                    source_arg = "--template" if mode == "create" else "--source"
+                    result = self.run_script(mode, self.fixtures / EXAMPLES[0][0],
+                                             source_arg, source, "--output", output)
+                    self.assertIn("WARNING: H5P.QuestionSet version differs", result.stderr)
+                    self.assertIn("validated 1.20", result.stderr)
+                    self.assertIn("dependency: 2.0", result.stderr)
+                    self.assertIn("semantics folder: 2.0", result.stderr)
+                    self.assertIn("WARNING: H5P.MultiChoice version differs", result.stderr)
+                    self.assertIn("dependency: 1.17", result.stderr)
+                    self.assertIn("question references: 1.17", result.stderr)
+                    self.assertIn("semantics folder: 1.17", result.stderr)
+                    manifest, content = get_json(output)
+                    self.assertEqual(manifest["preloadedDependencies"][0]["majorVersion"], 2)
+                    self.assertEqual(content["questions"][0]["library"], "H5P.MultiChoice 1.17")
+                    with zipfile.ZipFile(output) as archive:
+                        self.assertIn("H5P.MultiChoice-1.17/semantics.json", archive.namelist())
+
+    def test_normal_versions_do_not_warn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "new.h5p"
+            result = self.run_script("create", self.fixtures / EXAMPLES[0][0],
+                                     "--template", self.fixtures / EXAMPLES[0][1],
+                                     "--output", output)
+            self.assertNotIn("WARNING:", result.stderr)
+
+    def test_mixed_version_locations_warn_without_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "mixed.h5p"
+            self.make_versioned_fixture(source, question_ref=(2, 3), semantics=(1, 18))
+            output = Path(tmp) / "result.h5p"
+            result = self.run_script("create", self.fixtures / EXAMPLES[0][0],
+                                     "--template", source, "--output", output)
+            self.assertNotIn("H5P.QuestionSet version differs", result.stderr)
+            self.assertIn("H5P.MultiChoice version differs", result.stderr)
+            self.assertIn("question references: 2.3", result.stderr)
+            self.assertIn("semantics folder: 1.18", result.stderr)
+
+    def test_missing_dependency_semantics_or_other_content_type_still_fails(self):
+        for case in ("missing_dependency", "missing_semantics", "other_library"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as tmp:
+                source = Path(tmp) / "bad.h5p"
+                options = ({"missing_dependency": "H5P.MultiChoice"} if case == "missing_dependency"
+                           else {case: True})
+                self.make_versioned_fixture(source, **options)
+                output = Path(tmp) / "result.h5p"
+                result = self.run_script("create", self.fixtures / EXAMPLES[0][0],
+                                         "--template", source, "--output", output, exit=2)
+                self.assertIn("ERROR:", result.stderr)
+                self.assertFalse(output.exists())
+
     def test_nonuniform_blueprints_are_rejected_for_create(self):
         with tempfile.TemporaryDirectory() as tmp:
             template = Path(tmp) / "different.h5p"
