@@ -331,17 +331,54 @@ class QuestionSetTests(unittest.TestCase):
             self.assertNotIn(content["questions"][-1]["subContentId"],
                              [q["subContentId"] for q in content["questions"][:-1]])
 
-    def test_title_and_remove_config(self):
+    def test_title_and_remove_config_by_default(self):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "out.h5p"
             self.run_script("create", "--text", self.fixtures / EXAMPLES[1][0],
                             "--template", self.fixtures / EXAMPLES[1][1], "--output", output,
-                            "--title", "My New Quiz", "--remove-local-config")
+                            "--title", "My New Quiz")
             manifest, _ = get_json(output)
             self.assertEqual(manifest["title"], "My New Quiz")
             self.assertEqual(manifest["extraTitle"], "My New Quiz")
             with zipfile.ZipFile(output) as arc:
                 self.assertNotIn("content/config.json", arc.namelist())
+
+    def test_local_config_removed_by_default_in_both_modes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for mode in ("create", "update"):
+                with self.subTest(mode=mode):
+                    source = self.fixtures / EXAMPLES[0][1]
+                    args = ["--template", source] if mode == "create" else ["--source", source]
+                    output = Path(tmp) / f"{mode}.h5p"
+                    self.run_script(mode, self.fixtures / EXAMPLES[0][0], *args, "--output", output)
+                    with zipfile.ZipFile(output) as arc:
+                        self.assertNotIn("content/config.json", arc.namelist())
+                        self.assertIn("fixture/marker.txt", arc.namelist())
+
+    def test_keep_local_config_explicitly_in_both_modes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for mode in ("create", "update"):
+                with self.subTest(mode=mode):
+                    source = self.fixtures / EXAMPLES[0][1]
+                    args = ["--template", source] if mode == "create" else ["--source", source]
+                    output = Path(tmp) / f"{mode}.h5p"
+                    self.run_script(mode, self.fixtures / EXAMPLES[0][0], *args,
+                                    "--output", output, "--keep-local-config")
+                    with zipfile.ZipFile(source) as original, zipfile.ZipFile(output) as out:
+                        self.assertEqual(out.read("content/config.json"), original.read("content/config.json"))
+
+    def test_legacy_remove_local_config_flag_and_conflicts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = self.fixtures / EXAMPLES[0][1]
+            text = self.fixtures / EXAMPLES[0][0]
+            output = Path(tmp) / "explicit.h5p"
+            self.run_script("create", text, "--template", source,
+                            "--output", output, "--remove-local-config")
+            with zipfile.ZipFile(output) as archive:
+                self.assertNotIn("content/config.json", archive.namelist())
+            self.run_script("create", text, "--template", source,
+                            "--output", output, "--remove-local-config",
+                            "--keep-local-config", exit=2)
 
     def test_inplace_requires_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -387,8 +424,9 @@ class QuestionSetTests(unittest.TestCase):
                             "--output", target)
             self.assertEqual(source.read_bytes(), before)
             with zipfile.ZipFile(source) as a, zipfile.ZipFile(target) as b:
+                self.assertNotIn("content/config.json", b.namelist())
                 for name in a.namelist():
-                    if name not in ("h5p.json", "content/content.json"):
+                    if name not in ("h5p.json", "content/content.json", "content/config.json"):
                         self.assertEqual(a.read(name), b.read(name))
 
     def test_nonuniform_blueprints_are_rejected_for_create(self):
