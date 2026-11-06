@@ -198,7 +198,9 @@ The script inherits these values from the selected template or source package. T
 
 - `--output "Other Filename.h5p"`: Overrides the default output path (the text file's path with `.h5p` extension).
 - `--title "Quiz title"`: Overrides the default title (text filename without extension) in `h5p.json` `title` and, if present, `extraTitle`.
-- `--remove-local-config`: Omits `content/config.json`. All three example packages contain this nonstandard file, which includes an absolute Windows path; removing it avoids carrying an obsolete path into the new package.
+- By default, the script **removes `content/config.json`** from generated packages in both create and update modes. This nonstandard file may contain an obsolete absolute Windows path from the source package.
+- `--keep-local-config`: Explicitly preserves `content/config.json` as-is, for workflows that require this application-specific metadata.
+- `--remove-local-config`: Legacy option retained for compatibility. Removal is already the default. It cannot be combined with `--keep-local-config`.
 - `--overwrite`: Permits replacing the output file, including the same path as the input H5P file.
 - `-h` / `--help`: Shows available commands and options, including subcommand help (`create --help` and `update --help`).
 
@@ -208,7 +210,7 @@ The script does **not** silently normalise the following source-package conditio
 
 1. Some MultiChoice packages may set `params.behaviour.singleAnswer=true`, including questions with multiple correct answers. `behaviour.type=auto` makes the H5P MultiChoice runtime calculate this flag from the actual number of correct answers. The stored field is preserved rather than rewritten.
 2. A package may omit `texts.questionSetInstruction` (which normally defaults to `Choose question to display`). That field is left as-is.
-3. `content/config.json` may contain obsolete absolute paths. It is retained by default to avoid changing other archive entries, or explicitly removed using `--remove-local-config`.
+3. `content/config.json` may contain obsolete absolute paths. It is omitted by default for portability and privacy; use `--keep-local-config` if an editor requires retaining it.
 4. Question metadata titles may be generic, e.g. `Untitled Multiple Choice`. They are preserved, not derived from the question text.
 
 ## Validation and errors
