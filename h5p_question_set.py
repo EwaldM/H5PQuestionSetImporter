@@ -306,10 +306,16 @@ def cli_parser() -> argparse.ArgumentParser:
             "--require-answer", type=boolean_option, metavar="true|false",
             help="Override 'Require answer before solution can be viewed'",
         )
-        sub.add_argument(
-            "--remove-local-config", action="store_true",
-            help="Remove nonstandard content/config.json, which may contain local paths",
+        local_config = sub.add_mutually_exclusive_group()
+        local_config.add_argument(
+            "--keep-local-config", dest="remove_local_config", action="store_false",
+            help="Preserve nonstandard content/config.json (may expose local paths)",
         )
+        local_config.add_argument(
+            "--remove-local-config", dest="remove_local_config", action="store_true",
+            help="Remove nonstandard content/config.json (the default; retained for compatibility)",
+        )
+        sub.set_defaults(remove_local_config=True)
         sub.add_argument(
             "--overwrite", action="store_true",
             help="Allow replacing an existing output file (including in-place updates)",
