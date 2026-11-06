@@ -1,6 +1,6 @@
 # H5P Question Set Text Importer
 
-[![Licence: CC BY 4.0](https://img.shields.io/badge/Licence-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Licence: MIT](https://img.shields.io/badge/Licence-MIT-blue.svg)](LICENSE)
 [![Python tests](https://img.shields.io/badge/tests-unittest-blue.svg)](#testing)
 
 A standalone Python 3.10+ script for **creating or updating an H5P Question Set from a UTF-8 text file**. It uses an existing `.h5p` package as the complete source of H5P libraries and settings; it does not require Moodle, an H5P server, or third-party Python packages.
@@ -19,8 +19,8 @@ h5p_question_set.py          Python CLI (no third-party dependencies)
 Import-H5P.cmd              Windows drag-and-drop launcher
 examples/sample_questions.txt  Example quiz input
 README.md                   Documentation and usage
-LICENSE                     CC BY 4.0 International legal code
-ATTRIBUTION.md              Attribution information to complete before publishing
+LICENSE                     MIT licence
+ATTRIBUTION.md              Copyright and third-party acknowledgements
 CONTRIBUTING.md             Contribution guidelines
 tests/                      Self-contained unittest suite
 .github/workflows/tests.yml GitHub Actions test workflow
@@ -235,28 +235,36 @@ py -3 -m unittest discover -s tests -p "test_*.py" -v
 
 GitHub Actions runs the same tests on Python 3.10, 3.12 and 3.13. Tests build synthetic H5P ZIP fixtures in temporary directories; they do **not** require private course examples or a downloadable H5P library. These fixtures verify the importer's file and JSON transformations, **not** that a synthetic package is playable in Moodle. Use your own real Question Set template for Moodle integration testing.
 
-## GitHub publishing
+## Publishing and updating on GitHub
 
-1. Complete the creator and project URL in [`ATTRIBUTION.md`](ATTRIBUTION.md). Check that you have the rights to license the material.
-2. Create a new empty GitHub repository (do not initialise it with a separate README or licence).
-3. In this directory, run:
+The repository is available at [EwaldM/H5PQuestionSetImporter](https://github.com/EwaldM/H5PQuestionSetImporter).
 
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial release: H5P Question Set Text Importer"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_ACCOUNT/YOUR_REPO.git
-   git push -u origin main
-   ```
+To update the **existing** repository with these licensing changes, copy the
+new `LICENSE`, `README.md` and `ATTRIBUTION.md` files into your local
+repository folder, replacing those files. Then execute the following from
+Git Bash in the repository directory:
 
-4. Replace `YOUR_ACCOUNT/YOUR_REPO` with the address of your newly created repository. Do not commit `template.h5p`; it is deliberately excluded via `.gitignore`.
+```bash
+git add LICENSE README.md ATTRIBUTION.md
+git commit -m "Change project licence to MIT"
+git push origin main
+```
 
-## Licence and attribution
+This only changes the licence and documentation; the Python script, launcher,
+examples and tests are unchanged. No new `git init` or `git remote add` is
+needed.
 
-This repository is offered under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). See [LICENSE](LICENSE) for its legal text and [ATTRIBUTION.md](ATTRIBUTION.md) for the creator and attribution details to complete before publication.
+## Licence
 
-Creative Commons [recommends against using CC licences for software](https://creativecommons.org/faq/#can-i-apply-a-creative-commons-license-to-software), since they do not address software-specific topics such as source-code distribution and patent rights. **CC BY 4.0 is used here as explicitly requested**, but if conventional software licensing is desired, consider a software licence such as MIT or Apache-2.0 instead. No third-party H5P library is included under this licence.
+This project is licensed under the **[MIT licence](LICENSE)**.
+Copyright (c) 2026 EwaldM. The MIT licence permits use, modification,
+redistribution and commercial use, provided that its copyright and permission
+notices are retained in copies or substantial portions.
+
+See [ATTRIBUTION.md](ATTRIBUTION.md) for copyright acknowledgements, the scope
+of the project licence, and the fact that earlier CC BY 4.0 releases retain
+their original licensing terms. The MIT licence does not apply to third-party
+H5P libraries or to externally supplied quiz content.
 
 ## References
 
