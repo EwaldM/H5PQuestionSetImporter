@@ -12,6 +12,7 @@ import copy
 import html
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -21,7 +22,7 @@ import zipfile
 
 QUESTION_SET_LIBRARY = "H5P.QuestionSet"
 QUESTION_SET_VERSION = (1, 20)
-MULTICHOICE_LIBRARY = "H5P.MultiChoice 1.16"
+MULTICHOICE_LIBRARY = "H5P.MultiChoice"
 MULTICHOICE_VERSION = (1, 16)
 # Resolve the implicit template independently of Windows shortcut "Start in".
 DEFAULT_TEMPLATE = Path(__file__).resolve().parent / "template.h5p"
@@ -137,33 +138,59 @@ def read_package(source: Path) -> tuple[dict, dict, list[tuple[zipfile.ZipInfo, 
     return info, content, entries, archive_comment
 
 
-def valid_dependency(info: dict, name: str, version: tuple[int, int]) -> bool:
-    return any(
-        isinstance(dependency, dict)
-        and dependency.get("machineName") == name
-        and dependency.get("majorVersion") == version[0]
-        and dependency.get("minorVersion") == version[1]
-        for dependency in info.get("preloadedDependencies", [])
-    )
+def dependency_versions(info: dict, name: str) -> set[tuple[int, int]]:
+    """Return declared versions of a required dependency, regardless of version."""
+    dependencies = info.get("preloadedDependencies", [])
+    if not isinstance(dependencies, list):
+        raise QuizError("H5P manifest has malformed preloadedDependencies")
+    versions = set()
+    for dependency in dependencies:
+        if not isinstance(dependency, dict) or dependency.get("machineName") != name:
+            continue
+        major = dependency.get("majorVersion")
+        minor = dependency.get("minorVersion")
+        if type(major) is not int or type(minor) is not int:
+            raise QuizError(f"Malformed {name} dependency version")
+        versions.add((major, minor))
+    if not versions:
+        raise QuizError(f"Missing {name} dependency")
+    return versions
 
 
-def validate_source(info: dict, content: dict, entry_names: set[str]) -> None:
+def validate_source(info: dict, content: dict, entry_names: set[str]) -> list[str]:
+    """Check the known data structure, warning rather than failing on versions."""
     if not isinstance(info, dict) or info.get("mainLibrary") != QUESTION_SET_LIBRARY:
         raise QuizError(f"Source must be an {QUESTION_SET_LIBRARY} package")
-    if not valid_dependency(info, QUESTION_SET_LIBRARY, QUESTION_SET_VERSION):
-        raise QuizError("Only H5P.QuestionSet 1.20 packages are supported by this script")
-    if not valid_dependency(info, "H5P.MultiChoice", MULTICHOICE_VERSION):
-        raise QuizError("Missing H5P.MultiChoice 1.16 dependency")
-    if "H5P.MultiChoice-1.16/semantics.json" not in entry_names:
-        raise QuizError("H5P.MultiChoice 1.16 semantics are not included")
+
+    question_set_versions = dependency_versions(info, QUESTION_SET_LIBRARY)
+    multi_versions = dependency_versions(info, MULTICHOICE_LIBRARY)
+    question_set_semantics_versions = {
+        (int(match.group(1)), int(match.group(2)))
+        for name in entry_names
+        if (match := re.fullmatch(r"H5P\.QuestionSet-(\d+)\.(\d+)/semantics\.json", name))
+    }
+    semantics_versions = {
+        (int(match.group(1)), int(match.group(2)))
+        for name in entry_names
+        if (match := re.fullmatch(r"H5P\.MultiChoice-(\d+)\.(\d+)/semantics\.json", name))
+    }
+    if not semantics_versions:
+        raise QuizError("H5P.MultiChoice semantics are not included")
+
     if not isinstance(content, dict):
         raise QuizError("Question Set content/content.json must contain a JSON object")
     questions = content.get("questions")
     if not isinstance(questions, list) or not questions:
         raise QuizError("Source Question Set needs at least one MultiChoice question as blueprint")
+    question_versions = set()
     for index, original in enumerate(questions, start=1):
-        if not isinstance(original, dict) or original.get("library") != MULTICHOICE_LIBRARY:
-            raise QuizError(f"Existing question {index} is not {MULTICHOICE_LIBRARY}")
+        if not isinstance(original, dict):
+            raise QuizError(f"Existing question {index} is not a {MULTICHOICE_LIBRARY} question")
+        library = original.get("library")
+        match = re.fullmatch(r"H5P\.MultiChoice (\d+)\.(\d+)", library) if isinstance(library, str) else None
+        if match is None:
+            raise QuizError(f"Existing question {index} is not a versioned {MULTICHOICE_LIBRARY} question")
+        question_versions.add((int(match.group(1)), int(match.group(2))))
         params = original.get("params")
         if not isinstance(params, dict) or not isinstance(params.get("answers"), list):
             raise QuizError(f"Existing question {index} has malformed MultiChoice parameters")
@@ -179,6 +206,35 @@ def validate_source(info: dict, content: dict, entry_names: set[str]) -> None:
                 f"Existing question {index} uses embedded media, which cannot be "
                 "mapped unambiguously from the provided text format"
             )
+
+    def mismatches(found: dict[str, set[tuple[int, int]]], supported: tuple[int, int]) -> str:
+        parts = []
+        for location, versions in found.items():
+            unexpected = versions - {supported}
+            if unexpected:
+                rendered = ", ".join(f"{major}.{minor}" for major, minor in sorted(unexpected))
+                parts.append(f"{location}: {rendered}")
+        return "; ".join(parts)
+
+    warnings = []
+    for name, supported, found in (
+        (QUESTION_SET_LIBRARY, QUESTION_SET_VERSION, {
+            "dependency": question_set_versions,
+            "semantics folder": question_set_semantics_versions,
+        }),
+        (MULTICHOICE_LIBRARY, MULTICHOICE_VERSION, {
+            "dependency": multi_versions,
+            "question references": question_versions,
+            "semantics folder": semantics_versions,
+        }),
+    ):
+        details = mismatches(found, supported)
+        if details:
+            warnings.append(
+                f"{name} version differs from validated {supported[0]}.{supported[1]} "
+                f"({details}). Continuing with structural validation, but compatibility is not guaranteed."
+            )
+    return warnings
 
 
 def same_blueprint(questions: list[dict]) -> bool:
@@ -256,7 +312,7 @@ def save_package(
 def cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Build/update H5P Question Set 1.20 (MultiChoice 1.16) from a UTF-8 "
+            "Build/update H5P Question Sets from a UTF-8 "
             "text file. CREATE is the default mode."
         ),
         epilog=(
@@ -347,7 +403,9 @@ def main(argv: list[str] | None = None) -> int:
             raise QuizError("Quiz title may not be empty")
         parsed = parse_questions(text_file)
         info, content, entries, comment = read_package(source)
-        validate_source(info, content, {zinfo.filename for zinfo, _ in entries})
+        warnings = validate_source(info, content, {zinfo.filename for zinfo, _ in entries})
+        for warning in warnings:
+            print(f"WARNING: {warning}", file=sys.stderr)
         existing = content["questions"]
         changes = {key: getattr(args, key) for key in BEHAVIOUR_FLAGS}
         updated = build_questions(existing, parsed, args.mode, changes)
