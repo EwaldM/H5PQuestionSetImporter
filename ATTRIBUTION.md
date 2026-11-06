@@ -24,6 +24,12 @@ This project is independent of H5P and is not officially endorsed by H5P Group.
 
 ## Other third-party materials
 
+The optional `template.h5p` package contains H5P Question Set and other H5P
+library assets. Those bundled upstream components retain their respective
+copyright and licence terms; the repository's MIT licence does not supersede
+them. The published template contains only a placeholder question and omits
+Lumi's local `content/config.json` path metadata.
+
 The project MIT licence covers only source code, documentation, and examples
 that the copyright holder has rights to license. Other H5P libraries,
 third-party H5P packages, user-supplied templates, and quizzes retain their
