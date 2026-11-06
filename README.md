@@ -256,6 +256,18 @@ This only changes the licence and documentation; the Python script, launcher,
 examples and tests are unchanged. No new `git init` or `git remote add` is
 needed.
 
+## Shortcut icon
+
+A multi-resolution Windows shortcut icon is supplied as
+[`assets/H5P-Question-Set-Shortcut.ico`](assets/H5P-Question-Set-Shortcut.ico).
+To use it, open your shortcut's **Properties → Shortcut → Change Icon** and
+select this ICO file.
+
+The artwork is based on the H5P Question Set icon, copyright Joubel AS,
+licensed under MIT. See [ATTRIBUTION.md](ATTRIBUTION.md) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution and the
+upstream licence notice.
+
 ## Licence
 
 This project is licensed under the **[MIT licence](LICENSE)**.
