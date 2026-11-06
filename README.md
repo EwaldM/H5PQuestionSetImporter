@@ -155,7 +155,7 @@ py -3 h5p_question_set.py update `
 
 The **full question list is replaced**, not appended to. Existing Question Set properties are left unchanged except for the H5P title. For each existing question position, the new text/answers replace the old text/answers, while its other MultiChoice properties and metadata are preserved. **Every output question receives a fresh `subContentId` UUID**, including position-matched questions in update mode. If the input contains additional questions, they use the first original question as a blueprint, provided the existing questions have uniform non-text settings/metadata; otherwise an error is reported rather than guessing. Excess original questions are omitted.
 
-The default output path is the text file's path with `.h5p` extension; the default H5P title is its filename without extension. If the output already exists, use `--overwrite` or choose another file with `--output`.
+The default output path is the text file's path with `.h5p` extension. The default H5P title is its filename **without the extension**, with `_` and `.` characters replaced by spaces. For example, `Quiz_for_Video.v2.txt` produces `Quiz_for_Video.v2.h5p` titled `Quiz for Video v2`. This applies to both create and update modes; `--title` uses the exact supplied value. If the output already exists, use `--overwrite` or choose another file with `--output`.
 
 ### Update in place
 
@@ -197,7 +197,7 @@ The script inherits these values from the selected template or source package. T
 ### Other options
 
 - `--output "Other Filename.h5p"`: Overrides the default output path (the text file's path with `.h5p` extension).
-- `--title "Quiz title"`: Overrides the default title (text filename without extension) in `h5p.json` `title` and, if present, `extraTitle`.
+- `--title "Quiz title"`: Overrides the cleaned default title in `h5p.json` `title` and, if present, `extraTitle`. Its value is used literally; underscores and dots are not replaced.
 - By default, the script **removes `content/config.json`** from generated packages in both create and update modes. This nonstandard file may contain an obsolete absolute Windows path from the source package.
 - `--keep-local-config`: Explicitly preserves `content/config.json` as-is, for workflows that require this application-specific metadata.
 - `--remove-local-config`: Legacy option retained for compatibility. Removal is already the default. It cannot be combined with `--keep-local-config`.
