@@ -5,12 +5,14 @@
 
 A standalone Python 3.10+ script for **creating or updating an H5P Question Set from a UTF-8 text file**. It uses an existing `.h5p` package as the complete source of H5P libraries and settings; it does not require Moodle, an H5P server, or third-party Python packages.
 
-Supported package versions (verified with the supplied examples):
+Reference library versions (validated with the supplied examples):
 
 - `H5P.QuestionSet` **1.20**
-- `H5P.MultiChoice` **1.16**, exclusively (questions of other H5P content types are rejected)
+- `H5P.MultiChoice` **1.16**
 
-The script will reject unsupported package versions rather than assuming that their JSON schemas are compatible.
+**Other versions are permitted.** The importer writes a `WARNING:` to standard error if either library differs from these reference versions, but continues processing. It checks versions declared in `h5p.json`, versions used by embedded MultiChoice questions, and versions in bundled library semantics paths, where present. The input versions are **preserved** in the generated package.
+
+The importer still requires a Question Set containing MultiChoice questions and validates the JSON structures it needs. Other H5P content types, missing required dependencies, absent MultiChoice semantics and malformed input remain errors. A warning is not a guarantee that an untested H5P version will work in Moodle or another editor.
 
 ## Repository layout
 
@@ -219,7 +221,7 @@ The script returns exit code **0** on success and **2** for validation/package e
 
 - The input is readable UTF-8 text and the H5P file is an intact ZIP archive.
 - Each question has the expected answer format and at least one correct answer.
-- The H5P source uses the supported Question Set and MultiChoice versions.
+- The H5P source declares the required Question Set and MultiChoice dependencies. Versions different from the validated reference versions produce **warnings rather than errors**.
 - Every existing question is MultiChoice and has the expected parameter structures.
 - Embedded question media are absent (the text format does not describe media).
 - The blueprint is unambiguous when new question objects must be generated.
