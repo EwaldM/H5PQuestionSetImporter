@@ -9,11 +9,24 @@ The MIT licence allows use, modification, distribution and commercial use,
 provided that the copyright notice and permission notice are included in all
 copies or substantial portions of the software.
 
-## Third-party materials
+## Third-party artwork — H5P Question Set icon
 
-The licence covers only the source code, documentation, and examples that the
-copyright holder has the rights to license. H5P libraries, third-party H5P
-packages, user-supplied templates, and quizzes are not included and keep their
+The Windows shortcut icon in `assets/H5P-Question-Set-Shortcut.ico` is
+derived from the [original H5P Question Set icon](https://github.com/h5p/h5p-question-set/blob/master/icon.svg).
+
+Copyright (c) 2012–2014 Joubel AS. Licensed under MIT.
+The converted icon has been cropped/reframed, made transparent, and exported
+as a multi-resolution Windows ICO file. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the original MIT
+permission and warranty notice.
+
+This project is independent of H5P and is not officially endorsed by H5P Group.
+
+## Other third-party materials
+
+The project MIT licence covers only source code, documentation, and examples
+that the copyright holder has rights to license. Other H5P libraries,
+third-party H5P packages, user-supplied templates, and quizzes retain their
 respective copyrights and licences.
 
 ## Previous versions
