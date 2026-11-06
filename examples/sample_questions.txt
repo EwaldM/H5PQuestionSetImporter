@@ -1,0 +1,8 @@
+What does an H5P Question Set contain?
+*A sequence of questions:Think about a quiz made from several questions:Correct; a Question Set groups questions:Each question is evaluated as part of the quiz
+A collection of user accounts:Consider the purpose of H5P:This is not a user directory:H5P content is for interactive learning
+
+Which features can this script provide?
+*Create an H5P package using a template:Consider create mode:Yes; create uses a template:Create mode is used to build a new quiz
+*Replace questions in an existing H5P package:Consider update mode:Yes; update replaces the question list:Update mode can preserve question-specific settings
+Publish a quiz directly to Moodle:Consider what the script outputs:It produces a local H5P package:Importing into Moodle is a separate operation

@@ -1,0 +1,6 @@
+# Preserve the correct line endings for Windows drag-and-drop.
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.cmd text eol=crlf

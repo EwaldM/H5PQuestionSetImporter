@@ -1,0 +1,22 @@
+# Python bytecode and local tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# H5P packages, including the local template and generated quizzes.
+# They may contain copyrighted H5P libraries or privately authored content.
+*.h5p
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary output
+*.tmp
+*.log
