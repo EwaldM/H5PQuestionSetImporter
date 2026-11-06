@@ -292,7 +292,7 @@ def cli_parser() -> argparse.ArgumentParser:
             help="Resulting .h5p path (default: text file path with .h5p extension)",
         )
         sub.add_argument(
-            "--title", help="Title in h5p.json (default: text file name without extension)",
+            "--title", help="Title in h5p.json (default: text filename stem, replacing underscores and dots with spaces)",
         )
         sub.add_argument(
             "--single-point", type=boolean_option, metavar="true|false",
@@ -340,7 +340,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         source = args.template if args.mode == "create" else args.source
         output = args.output if args.output is not None else text_file.with_suffix(".h5p")
-        title = args.title if args.title is not None else text_file.stem
+        title = args.title if args.title is not None else text_file.stem.replace("_", " ").replace(".", " ")
         if source.suffix.lower() != ".h5p" or output.suffix.lower() != ".h5p":
             raise QuizError("H5P input and output filenames must end with .h5p")
         if not title.strip():
