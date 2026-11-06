@@ -7,9 +7,10 @@ __pycache__/
 .venv/
 venv/
 
-# H5P packages, including the local template and generated quizzes.
-# They may contain copyrighted H5P libraries or privately authored content.
+# H5P output packages are ignored; the explicitly designated reusable template is allowed.
+# Check third-party licences and remove any private data before publishing templates.
 *.h5p
+!template.h5p
 
 # OS and editors
 .DS_Store
