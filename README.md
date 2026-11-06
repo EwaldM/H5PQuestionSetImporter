@@ -26,7 +26,7 @@ tests/                      Self-contained unittest suite
 .github/workflows/tests.yml GitHub Actions test workflow
 ```
 
-**Not included:** `template.h5p`. Supply an H5P Question Set you are authorised to use. H5P packages are ignored by Git to avoid accidentally committing third-party libraries or training content.
+**Default template:** `template.h5p` can be included at the repository root. Unlike generated H5P packages, this filename is permitted by `.gitignore`. If your checkout does not yet contain it, add a suitable H5P Question Set template that you have rights to distribute. The template supplied for this project contains one placeholder question and the H5P libraries needed for import.
 
 
 ## Input format
@@ -64,7 +64,7 @@ On Windows, run the script with `py -3` (or `python`). Paths containing spaces s
 
 ### Create a new H5P package (default mode)
 
-Place an H5P Question Set package named **`template.h5p` in the same folder as `h5p_question_set.py`**. The default template path is resolved from the *script's directory*, independent of the current working directory and the Windows shortcut's **Start in** field. An explicit `--template` path overrides this default. The default template is **not** bundled with this script: copy one of your existing, suitable H5P Question Set packages and rename that copy to `template.h5p`.
+The default template is **`template.h5p` beside `h5p_question_set.py`**. When that file is included in your checkout, no extra template setup is needed. If it is absent, put your own compatible H5P Question Set there. The path is resolved from the *script's directory*, independent of the current working directory and the Windows shortcut's **Start in** field. An explicit `--template` overrides this default.
 
 Shortest invocation:
 
