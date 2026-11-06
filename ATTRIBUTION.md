@@ -1,14 +1,23 @@
-# Attribution
+# Copyright and acknowledgements
 
-This project is intended to be published under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** licence. See [LICENSE](LICENSE) and the [official licence page](https://creativecommons.org/licenses/by/4.0/).
+**Project:** H5P Question Set Text Importer  
+**Repository:** https://github.com/EwaldM/H5PQuestionSetImporter  
+**Copyright:** Copyright (c) 2026 EwaldM  
+**Licence:** [MIT](LICENSE)
 
-Complete the following details before making the repository public:
+The MIT licence allows use, modification, distribution and commercial use,
+provided that the copyright notice and permission notice are included in all
+copies or substantial portions of the software.
 
-- **Creator / rights holder:** `[YOUR NAME OR ORGANISATION]`
-- **Original project URL:** `[YOUR GITHUB REPOSITORY URL]`
-- **Project title:** `H5P Question Set Text Importer`
-- **Licence:** `CC BY 4.0 International`
+## Third-party materials
 
-When redistributing or modifying the project, provide appropriate attribution, link to the licence, and indicate changes. The Git history can help document revisions, but attribution notices must still be retained.
+The licence covers only the source code, documentation, and examples that the
+copyright holder has the rights to license. H5P libraries, third-party H5P
+packages, user-supplied templates, and quizzes are not included and keep their
+respective copyrights and licences.
 
-This licence covers only material that the listed rights holder is entitled to license. Third-party H5P libraries, user-provided templates, and user-created quizzes are **not bundled** and retain their own rights and licences.
+## Previous versions
+
+Versions previously published under Creative Commons Attribution 4.0
+International (CC BY 4.0) remain available under those original terms.
+The current version is offered under the MIT licence.
