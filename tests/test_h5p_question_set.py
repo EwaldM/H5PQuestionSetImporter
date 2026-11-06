@@ -243,16 +243,33 @@ class QuestionSetTests(unittest.TestCase):
             self.run_script("create", "--text", text_file, "--template", source)
             self.assertTrue(expected.is_file())
             meta, created = get_json(expected)
-            self.assertEqual(meta["title"], "My Quiz.v2")
-            self.assertEqual(meta.get("extraTitle"), "My Quiz.v2")
+            self.assertEqual(meta["title"], "My Quiz v2")
+            self.assertEqual(meta.get("extraTitle"), "My Quiz v2")
             initial_id = created["questions"][0]["subContentId"]
             self.run_script("update", "--text", text_file, "--source", expected,
                             "--overwrite")
             meta, updated = get_json(expected)
-            self.assertEqual(meta["title"], "My Quiz.v2")
+            self.assertEqual(meta["title"], "My Quiz v2")
             self.assertEqual(updated["questions"][0]["params"], created["questions"][0]["params"])
             self.assertNotEqual(updated["questions"][0]["subContentId"], initial_id)
 
+    def test_filename_title_cleanup_and_explicit_title_unchanged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            text_file = Path(tmp) / "Quiz_for_Video.v2.txt"
+            text_file.write_text("Q?\n*Yes:hint:chosen:not chosen\n", encoding="utf-8")
+            source = self.fixtures / EXAMPLES[0][1]
+            self.run_script("create", "--text", text_file, "--template", source)
+            output = text_file.with_suffix(".h5p")
+            self.assertTrue(output.is_file())
+            manifest, _ = get_json(output)
+            self.assertEqual(manifest["title"], "Quiz for Video v2")
+            self.assertEqual(manifest.get("extraTitle"), "Quiz for Video v2")
+            explicit = Path(tmp) / "explicit.h5p"
+            self.run_script("update", "--text", text_file, "--source", output,
+                            "--output", explicit, "--title", "Custom_title.v2")
+            manifest, _ = get_json(explicit)
+            self.assertEqual(manifest["title"], "Custom_title.v2")
+            self.assertEqual(manifest.get("extraTitle"), "Custom_title.v2")
     def test_default_title_and_explicit_output(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "custom-output.h5p"
